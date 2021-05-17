@@ -1,15 +1,18 @@
+from django.core.checks import messages
+from django.db.models import query
 from django.http import response
 from rest_framework.serializers import Serializer
 from users.models import User
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import BookingSerializer, UserSerializer, AdvisorSerializer
+from .serializers import BookingSerializer, UserSerializer, AdvisorSerializer, BookingShowSerializer
 from rest_framework.response import Response 
 from rest_framework.exceptions import AuthenticationFailed
 from .models import Bookings, User,Advisors
 import jwt, datetime
 from rest_framework import viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 # Create your views here.
 
 #For registering a user 
@@ -86,6 +89,7 @@ class LogoutView(APIView):
         response.data = {
             'message' : 'success'
         }
+        return response
 
 
 #For adding an advisor
@@ -101,31 +105,71 @@ class AddAdvisorView(APIView):
 #For viewing all the advisors        
 class AdvisorListView(APIView):
     def get(self, request, user_id):
-        user = User.objects.get(id=user_id)
-        advisors = Advisors.objects.all()
-        serializer = AdvisorSerializer(advisors, many=True)
-        return Response(serializer.data)
+        token = request.COOKIES.get('jwt')
+
+        if not token:
+            raise AuthenticationFailed('Unauthenticated!')
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated!')
+
+        user1 = User.objects.get(id=payload['id'])
+        user2 = User.objects.get(id=user_id)
+        if user1.id == user2.id:
+            advisors = Advisors.objects.all()
+            serializer = AdvisorSerializer(advisors, many=True)
+            return Response(serializer.data)
+        else:
+            raise AuthenticationFailed('Unauthenticated!')
 
 
 #For booking an advisor
 class BookAdvisorView(APIView):
     def post(self, request, user_id, advisor_id):
-        advisor_obj = Advisors.objects.get(id = advisor_id)
-        user_obj = User.objects.get(id = user_id)
-        booking_serializer = BookingSerializer(data=request.data)
-        booking_serializer.is_valid(raise_exception=True)
-        booking_serializer.validated_data['advisor'] = advisor_obj
-        booking_serializer.validated_data['user'] = user_obj
-        booking_serializer.save()
-        return Response({
-            'message' : 'success'
-        })      
+        token = request.COOKIES.get('jwt')
+
+        if not token:
+            raise AuthenticationFailed('Unauthenticated!')
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated!')
+
+        user1 = User.objects.get(id=payload['id'])
+        user2 = User.objects.get(id=user_id)
+        if user1.id == user2.id:
+            advisor_obj = Advisors.objects.get(id = advisor_id)
+            user_obj = User.objects.get(id = user_id)
+            booking_serializer = BookingSerializer(data=request.data)
+            booking_serializer.is_valid(raise_exception=True)
+            booking_serializer.validated_data['advisor'] = advisor_obj
+            booking_serializer.validated_data['user'] = user_obj
+            booking_serializer.save()
+            return Response({
+                'message' : 'success'
+            })
+        else:
+            raise AuthenticationFailed('Unauthenticated!')     
 
 #For viewing all booked advisors 
 class BookedListView(APIView):
     def get(self, request, user_id):
-        booking = Bookings.objects.all()
-        booking_serializer = BookingSerializer(booking, many=True)
-        return Response(booking_serializer.data)
+        token = request.COOKIES.get('jwt')
 
+        if not token:
+            raise AuthenticationFailed('Unauthenticated!')
+        try:
+            payload = jwt.decode(token, 'secret', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Unauthenticated!')
+
+        user1 = User.objects.get(id=payload['id'])
+        user2 = User.objects.get(id=user_id)
+        if user1.id == user2.id:
+            booking = Bookings.objects.filter(user = user2).all()
+            booking_serializer = BookingShowSerializer(booking, many=True)
+            return Response(booking_serializer.data)
+        else:
+            raise AuthenticationFailed('Unauthenticated!')     
 

@@ -17,7 +17,7 @@ class Advisors(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     profile_pic = models.ImageField(upload_to="Advisors/")
-    
+    objects = models.Manager()
     
 
 
@@ -26,3 +26,4 @@ class Bookings(models.Model):
     booking_time = models.DateTimeField(null=True)
     advisor = models.ForeignKey(Advisors,on_delete = models.DO_NOTHING ,null=True)
     user = models.ForeignKey(User,on_delete = models.DO_NOTHING ,null=True)
+    objects = models.Manager()
