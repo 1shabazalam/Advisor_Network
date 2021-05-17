@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-znbb6)+zjirypjv1y)w8l4^%jf)5*cav5q-!3o@m5arth7*=6^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['bookedadvices.herokuapp.com', '127.0.0.1']
 
 
 # Application definition
@@ -78,17 +78,23 @@ WSGI_APPLICATION = 'advisor_network.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'advisor_network',
-        'USER' : 'root',
-        'PASSWORD' : '',
-        'HOST' : 'localhost',
-        'PORT' : '3306'
-    } 
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'advisor_network',
+#         'USER' : 'root',
+#         'PASSWORD' : '',
+#         'HOST' : 'localhost',
+#         'PORT' : '3306'
+#     } 
+# }
 
+DATABASES = {
+    'default' : {
+        'ENGINES' : 'django.db.backends.sqlite3',
+        'NAME' : (BASE_DIR/'db.sqlite3'),
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
